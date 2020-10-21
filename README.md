@@ -1,2 +1,2 @@
 # Image-vector-comparing
-Simple API based on DRF.
+Web-application based on DRF.
