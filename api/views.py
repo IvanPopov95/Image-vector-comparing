@@ -10,7 +10,7 @@ from .models import Person
 from .serializers import PersonSerializer, IdSerializer
 
 class PersonView(APIView):
-    parser_classes = [MultiPartParser]
+    parser_classes = [MultiPartParser, JSONParser]
 
     def get(self, request):
         persons = Person.objects.values_list('ID', flat=True)
@@ -23,30 +23,26 @@ class PersonView(APIView):
 
         if serializer.is_valid():
             new_person = serializer.save()
-            return Response({"ID": new_person.ID}, status=200)
+            return Response({"ID": new_person.ID})
         else:
-            return Response(serializer.errors, status=400)
+            return Response(serializer.errors)
 
     def put(self, request):
         image = request.data.get('image')
         ID = request.data.get('ID')
         if not ID or not image:
-            return Response({"message": "No image or no ID", status=400})
+            return Response({"message": "No image or no ID"})
         else:
             vector = vector_from_image(image)
             person = get_object_or_404(Person, pk=ID)
             person.vector = vector
             person.save()
-            return Response({"message": "Succes", status=200})
-
-
-
-
+            return Response({"message": "Succes"})
 
 class PersonDetailView(APIView):
 
     def get(self, request, person_id):
-        person = get_object_or_404(Person, pk=person_id)
+        person = get_object_or_404(Person.objects.all(), pk=person_id)
 
         return Response({"message": "Name : {0}, Surname: {1} , Vector : {2}".format(person.name, person.surname, person.vector)})
 
@@ -63,12 +59,12 @@ class CompareView(APIView):
         ID_1 = request.data.get('ID_1')
         ID_2 = request.data.get('ID_2')
         if not ID_1 or not ID_2:
-            return Response({"message": "Not all ID's in request", status=400})
+            return Response({"message": "Not all ID's in request"})
         else:
             person_1 = get_object_or_404(Person, pk=ID_1)
             person_2 = get_object_or_404(Person, pk=ID_2)
             result = euclidean_distance(person_1.vector, person_2.vector)
-            return Response({'Euclidian distance':"{0}".format(result), status=200})
+            return Response({'Euclidian distance':"{0}".format(result)})
         
 
 def vector_from_image(image):
