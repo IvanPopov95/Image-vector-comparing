@@ -13,7 +13,7 @@ class PersonView(APIView):
     parser_classes = [MultiPartParser, JSONParser]
 
     def get(self, request):
-        persons = Person.objects.values_list('ID', flat=True)
+        persons = Person.objects.all()
         serializer = IdSerializer(persons, many=True)
         return Response({"persons": serializer.data})
 
@@ -36,15 +36,16 @@ class PersonView(APIView):
             vector = vector_from_image(image)
             person = get_object_or_404(Person, pk=ID)
             person.vector = vector
+            person.hasVector = True
             person.save()
             return Response({"message": "Succes"})
 
 class PersonDetailView(APIView):
 
     def get(self, request, person_id):
-        person = get_object_or_404(Person.objects.all(), pk=person_id)
+        person = get_object_or_404(Person, pk=person_id)
 
-        return Response({"message": "Name : {0}, Surname: {1} , Vector : {2}".format(person.name, person.surname, person.vector)})
+        return Response({"name": person.name, "surname": person.surname,"Vector status": person.hasVector})
 
     def delete(self, request, person_id):
         person = get_object_or_404(Person, pk=person_id)
