@@ -33,9 +33,9 @@ class PersonView(APIView):
         if not ID or not image:
             return Response({"message": "No image or no ID"})
         else:
-            vector = vector_from_image(image)
+            normal_vector = vector_from_image(image)
             person = get_object_or_404(Person, pk=ID)
-            person.vector = vector
+            person.vector = normal_vector
             person.hasVector = True
             person.save()
             return Response({"message": "Succes"})
@@ -54,11 +54,11 @@ class PersonDetailView(APIView):
         return Response({"message": "Person {0} {1} has been deleted".format(person.name, person.surname)})
 
 class CompareView(APIView):
-    parser_classes = [JSONParser]
+    parser_classes = (JSONParser,)
 
     def get(self, request):
-        ID_1 = request.data.get('ID_1')
-        ID_2 = request.data.get('ID_2')
+        ID_1 = request.data["ID_1"]
+        ID_2 = request.data["ID_2"]
         if not ID_1 or not ID_2:
             return Response({"message": "Not all ID's in request"})
         else:
@@ -66,13 +66,16 @@ class CompareView(APIView):
             person_2 = get_object_or_404(Person, pk=ID_2)
             result = euclidean_distance(person_1.vector, person_2.vector)
             return Response({'Euclidian distance':"{0}".format(result)})
+
         
 
 def vector_from_image(image):
-    image_from_bytes = Image.frombytes('RGB', (300,300), image, 'raw')
-    arr = np.array(image_from_bytes)
+    size = (300, 300)
+    myimage = Image.open(image)
+    newimage = myimage.resize(size)
+    arr = np.array(newimage)
     vector = arr.shape
-    normal_vector = [x/255 for x in vector]
+    normal_vector = list(np.divide(vector, 255))
     return normal_vector
 
 def euclidean_distance(vector_1, vector_2):
